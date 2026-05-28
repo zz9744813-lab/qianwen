@@ -483,25 +483,29 @@ tbody tr:last-child td {
 /* 优先级样式 */
 .priority-badge {
     display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
     font-size: 0.85em;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .priority-critical {
-    background-color: #f8d7da;
-    color: #721c24;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
 .priority-high {
-    background-color: #fff3cd;
-    color: #856404;
+    background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(253, 126, 20, 0.3);
 }
 
 .priority-normal {
-    background-color: #e2e3e5;
-    color: #383d41;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
 }
 
 /* 标签徽章样式 */
@@ -509,14 +513,17 @@ tbody tr:last-child td {
     display: inline-block;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 3px 10px;
+    padding: 4px 10px;
     border-radius: 12px;
     font-size: 0.8em;
     margin: 2px;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
 
 /* 通知渠道图标 */
 .channel-icon {
-    font-size: 1.2em;
-    margin-right: 3px;
+    font-size: 1.3em;
+    margin-right: 4px;
+    display: inline-block;
 }
