@@ -16,64 +16,86 @@
 
         <!-- 导航标签 -->
         <nav class="tabs">
-            <button class="tab-btn active" data-tab="dashboard">仪表板</button>
-            <button class="tab-btn" data-tab="history">历史记录</button>
-            <button class="tab-btn" data-tab="sources">数据源</button>
-            <button class="tab-btn" data-tab="logs">日志</button>
-            <button class="tab-btn" data-tab="settings">设置</button>
+            <button class="tab-btn active" data-tab="dashboard">📊 仪表板</button>
+            <button class="tab-btn" data-tab="alerts">🚨 重要提醒</button>
+            <button class="tab-btn" data-tab="history">📜 历史记录</button>
+            <button class="tab-btn" data-tab="sources">📡 数据源</button>
+            <button class="tab-btn" data-tab="logs">📝 运行日志</button>
+            <button class="tab-btn" data-tab="settings">⚙️ 设置</button>
         </nav>
 
         <!-- 仪表板 -->
         <section id="dashboard" class="tab-content active">
+            <!-- 统计概览 -->
             <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card stat-total">
                     <div class="stat-icon">📊</div>
                     <div class="stat-info">
                         <div class="stat-value" id="total-count">-</div>
                         <div class="stat-label">总记录数</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card stat-new">
                     <div class="stat-icon">🆕</div>
                     <div class="stat-info">
                         <div class="stat-value" id="new-today">-</div>
                         <div class="stat-label">今日新增</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card stat-critical">
+                    <div class="stat-icon">🔴</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="critical-count">-</div>
+                        <div class="stat-label">紧急提醒</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-notified">
                     <div class="stat-icon">🔔</div>
                     <div class="stat-info">
                         <div class="stat-value" id="notified-count">-</div>
                         <div class="stat-label">已通知</div>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">⚡</div>
-                    <div class="stat-info">
-                        <button id="run-now-btn" class="run-btn">立即运行</button>
-                        <div class="stat-label">手动触发监测</div>
-                    </div>
-                </div>
             </div>
 
-            <!-- 图表区域 -->
+            <!-- 快捷操作 -->
+            <div class="quick-actions">
+                <button id="run-now-btn" class="action-btn action-primary">
+                    <span class="btn-icon">⚡</span>
+                    <span>立即运行监测</span>
+                </button>
+                <button id="refresh-dashboard" class="action-btn action-secondary">
+                    <span class="btn-icon">🔄</span>
+                    <span>刷新数据</span>
+                </button>
+            </div>
+
+            <!-- 优先级分类图表 -->
             <div class="charts-grid">
-                <div class="chart-card">
-                    <h3>按类型分布</h3>
+                <div class="chart-card chart-priority">
+                    <h3>📌 按优先级分布</h3>
+                    <div id="by-priority-chart" class="chart"></div>
+                </div>
+                <div class="chart-card chart-type">
+                    <h3>📑 按类型分布</h3>
                     <div id="by-type-chart" class="chart"></div>
                 </div>
-                <div class="chart-card">
-                    <h3>数据来源 TOP10</h3>
+                <div class="chart-card chart-source">
+                    <h3>📡 数据来源 TOP10</h3>
                     <div id="by-source-chart" class="chart"></div>
                 </div>
             </div>
 
             <!-- 最近活动 -->
             <div class="recent-activity">
-                <h3>最近活动</h3>
+                <div class="section-header">
+                    <h3>🕐 最近活动</h3>
+                    <span class="view-all" onclick="switchTab('history')">查看全部 →</span>
+                </div>
                 <table id="recent-table">
                     <thead>
                         <tr>
+                            <th>优先级</th>
                             <th>来源</th>
                             <th>类型</th>
                             <th>标题</th>
@@ -82,15 +104,35 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="5" class="loading">加载中...</td></tr>
+                        <tr><td colspan="6" class="loading">加载中...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- 重要提醒 -->
+        <section id="alerts" class="tab-content">
+            <div class="alert-filters">
+                <button class="alert-filter-btn active" data-filter="all">全部</button>
+                <button class="alert-filter-btn" data-filter="critical">🔴 紧急</button>
+                <button class="alert-filter-btn" data-filter="high">🟠 重要</button>
+                <button class="alert-filter-btn" data-filter="email">📧 需邮件处理</button>
+            </div>
+            
+            <div id="alerts-list" class="alerts-list">
+                <div class="loading">加载中...</div>
             </div>
         </section>
 
         <!-- 历史记录 -->
         <section id="history" class="tab-content">
             <div class="filters">
+                <select id="filter-priority">
+                    <option value="">全部优先级</option>
+                    <option value="critical">🔴 紧急</option>
+                    <option value="high">🟠 重要</option>
+                    <option value="normal">⚪ 常规</option>
+                </select>
                 <select id="filter-type">
                     <option value="">全部类型</option>
                     <option value="policy">政策</option>
@@ -100,23 +142,24 @@
                 <select id="filter-source">
                     <option value="">全部来源</option>
                 </select>
-                <button id="apply-filter" class="btn">筛选</button>
+                <button id="apply-filter" class="btn btn-primary">筛选</button>
                 <button id="clear-filter" class="btn btn-secondary">清除</button>
             </div>
             <table id="history-table">
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>优先级</th>
                         <th>来源</th>
                         <th>类型</th>
                         <th>标题</th>
                         <th>链接</th>
                         <th>时间</th>
-                        <th>状态</th>
+                        <th>通知方式</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="7" class="loading">加载中...</td></tr>
+                    <tr><td colspan="8" class="loading">加载中...</td></tr>
                 </tbody>
             </table>
             <div class="pagination" id="pagination"></div>
@@ -124,6 +167,21 @@
 
         <!-- 数据源 -->
         <section id="sources" class="tab-content">
+            <div class="sources-summary">
+                <div class="summary-card">
+                    <div class="summary-value" id="source-total">-</div>
+                    <div class="summary-label">数据源总数</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="source-critical">-</div>
+                    <div class="summary-label">紧急监控</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="source-email">-</div>
+                    <div class="summary-label">邮件提醒</div>
+                </div>
+            </div>
+            
             <div id="sources-list" class="sources-list">
                 <div class="loading">加载中...</div>
             </div>
@@ -131,31 +189,80 @@
 
         <!-- 日志 -->
         <section id="logs" class="tab-content">
-            <button id="refresh-logs" class="btn">刷新日志</button>
+            <div class="logs-header">
+                <button id="refresh-logs" class="btn btn-primary">🔄 刷新日志</button>
+                <button id="download-logs" class="btn btn-secondary">📥 下载日志</button>
+                <select id="log-level-filter">
+                    <option value="all">全部级别</option>
+                    <option value="ERROR">❌ 错误</option>
+                    <option value="WARNING">⚠️ 警告</option>
+                    <option value="INFO">ℹ️ 信息</option>
+                </select>
+            </div>
             <pre id="logs-content" class="logs-content">加载中...</pre>
         </section>
 
         <!-- 设置 -->
         <section id="settings" class="tab-content">
-            <div class="settings-card">
-                <h3>关键词列表</h3>
-                <div id="keywords-list" class="keywords-list">
-                    <div class="loading">加载中...</div>
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>🔑 关键词列表</h3>
+                    <div id="keywords-list" class="keywords-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                    <p class="hint">编辑 config/keywords.txt 文件来修改关键词</p>
                 </div>
-                <p class="hint">编辑 config/keywords.txt 文件来修改关键词</p>
-            </div>
-            <div class="settings-card">
-                <h3>Hermes 配置</h3>
-                <p>当前 Hermes 接口状态：<span class="status-pending">待配置</span></p>
-                <p class="hint">请在 .env 文件中配置 Hermes 相关参数</p>
-            </div>
-            <div class="settings-card">
-                <h3>邮箱 IMAP 配置</h3>
-                <p>当前 IMAP 状态：<span class="status-pending">待配置</span></p>
-                <p class="hint">请在 .env 文件中配置邮箱 IMAP 参数</p>
+                
+                <div class="settings-card">
+                    <h3>📬 Hermes 通知配置</h3>
+                    <div class="config-status" id="hermes-status">
+                        <span class="status-indicator status-pending"></span>
+                        <span class="status-text">待配置</span>
+                    </div>
+                    <p class="hint">请在 .env 文件中配置 Hermes 相关参数</p>
+                    <div class="config-items">
+                        <div class="config-item">
+                            <label>Hermes API Endpoint:</label>
+                            <code id="hermes-endpoint">未配置</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <h3>📧 邮箱 IMAP 配置</h3>
+                    <div class="config-status" id="imap-status">
+                        <span class="status-indicator status-pending"></span>
+                        <span class="status-text">待配置</span>
+                    </div>
+                    <p class="hint">请在 .env 文件中配置邮箱 IMAP 参数</p>
+                    <div class="config-items">
+                        <div class="config-item">
+                            <label>IMAP 服务器:</label>
+                            <code id="imap-server">未配置</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>🌐 翻译服务配置</h3>
+                    <div class="config-status" id="translation-status">
+                        <span class="status-indicator status-disabled"></span>
+                        <span class="status-text">已禁用</span>
+                    </div>
+                    <p class="hint">启用日文自动翻译成中文功能</p>
+                    <div class="config-items">
+                        <div class="config-item">
+                            <label>当前状态:</label>
+                            <code id="translation-enabled">false</code>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
+
+    <!-- 提示框 -->
+    <div id="toast" class="toast"></div>
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
