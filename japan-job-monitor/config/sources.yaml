@@ -1,0 +1,62 @@
+# 赴日工作信息监测系统 - 配置文件
+
+# A类：日本官方政策/签证监测
+# type: page_change (页面变化监测) 或 rss
+# channel: email, discord, both
+sources:
+  # A类 - 官方政策
+  - name: "出入国在留管理庁"
+    type: page_change
+    url: "https://www.isa.go.jp/"
+    channel: both
+    note: "在留资格、特定技能、育成就労相关政策"
+  
+  - name: "厚生劳动省外国人雇用"
+    type: page_change
+    url: "https://www.mhlw.go.jp/"
+    channel: both
+    note: "外国人雇用相关政策"
+  
+  - name: "OTIT育成就労机构"
+    type: page_change
+    url: "https://www.otit.go.jp/"
+    channel: both
+    note: "技能実習・育成就労机构，新制度细则出处"
+  
+  - name: "e-Gov法令检索"
+    type: page_change
+    url: "https://elaws.e-gov.go.jp/"
+    channel: both
+    note: "育成就労法等法律原文"
+
+  # B类 - 招聘职位（通过邮件解析）
+  - name: "求职提醒邮箱"
+    type: email
+    url: "imap://your-email-server"  # IMAP服务器地址，实际在.env中配置
+    channel: both
+    note: "从专用邮箱拉取各平台求人提醒邮件"
+
+  # C类 - 中介资质名录
+  - name: "商务部对外劳务企业名录"
+    type: page_change
+    url: "http://femhzs.mofcom.gov.cn/"
+    channel: both
+    note: "防骗核验，名录有变动即通知"
+  
+  - name: "商务部走出去公共服务平台"
+    type: page_change
+    url: "https://fec.mofcom.gov.cn/"
+    channel: both
+    note: "对外投资合作信息"
+
+# 是否启用日文翻译（需要配置翻译API）
+enable_translation: false
+
+# 抓取设置
+fetch_settings:
+  # 请求间隔（秒），遵守robots.txt和限速要求
+  request_interval: 3
+  # User-Agent
+  user_agent: "JapanJobMonitor/1.0 (赴日工作信息监测系统)"
+  # 超时时间（秒）
+  timeout: 10
