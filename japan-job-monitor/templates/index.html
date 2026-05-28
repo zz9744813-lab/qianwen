@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赴日工作信息监测系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>🇯🇵 赴日工作信息监测系统</h1>
+            <p class="subtitle">自动监测政策变化 · 招聘职位 · 中介资质</p>
+        </header>
+
+        <!-- 导航标签 -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="dashboard">仪表板</button>
+            <button class="tab-btn" data-tab="history">历史记录</button>
+            <button class="tab-btn" data-tab="sources">数据源</button>
+            <button class="tab-btn" data-tab="logs">日志</button>
+            <button class="tab-btn" data-tab="settings">设置</button>
+        </nav>
+
+        <!-- 仪表板 -->
+        <section id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="total-count">-</div>
+                        <div class="stat-label">总记录数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🆕</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="new-today">-</div>
+                        <div class="stat-label">今日新增</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔔</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="notified-count">-</div>
+                        <div class="stat-label">已通知</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-info">
+                        <button id="run-now-btn" class="run-btn">立即运行</button>
+                        <div class="stat-label">手动触发监测</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>按类型分布</h3>
+                    <div id="by-type-chart" class="chart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>数据来源 TOP10</h3>
+                    <div id="by-source-chart" class="chart"></div>
+                </div>
+            </div>
+
+            <!-- 最近活动 -->
+            <div class="recent-activity">
+                <h3>最近活动</h3>
+                <table id="recent-table">
+                    <thead>
+                        <tr>
+                            <th>来源</th>
+                            <th>类型</th>
+                            <th>标题</th>
+                            <th>时间</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 历史记录 -->
+        <section id="history" class="tab-content">
+            <div class="filters">
+                <select id="filter-type">
+                    <option value="">全部类型</option>
+                    <option value="policy">政策</option>
+                    <option value="job">职位</option>
+                    <option value="registry">名录</option>
+                </select>
+                <select id="filter-source">
+                    <option value="">全部来源</option>
+                </select>
+                <button id="apply-filter" class="btn">筛选</button>
+                <button id="clear-filter" class="btn btn-secondary">清除</button>
+            </div>
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>来源</th>
+                        <th>类型</th>
+                        <th>标题</th>
+                        <th>链接</th>
+                        <th>时间</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- 数据源 -->
+        <section id="sources" class="tab-content">
+            <div id="sources-list" class="sources-list">
+                <div class="loading">加载中...</div>
+            </div>
+        </section>
+
+        <!-- 日志 -->
+        <section id="logs" class="tab-content">
+            <button id="refresh-logs" class="btn">刷新日志</button>
+            <pre id="logs-content" class="logs-content">加载中...</pre>
+        </section>
+
+        <!-- 设置 -->
+        <section id="settings" class="tab-content">
+            <div class="settings-card">
+                <h3>关键词列表</h3>
+                <div id="keywords-list" class="keywords-list">
+                    <div class="loading">加载中...</div>
+                </div>
+                <p class="hint">编辑 config/keywords.txt 文件来修改关键词</p>
+            </div>
+            <div class="settings-card">
+                <h3>Hermes 配置</h3>
+                <p>当前 Hermes 接口状态：<span class="status-pending">待配置</span></p>
+                <p class="hint">请在 .env 文件中配置 Hermes 相关参数</p>
+            </div>
+            <div class="settings-card">
+                <h3>邮箱 IMAP 配置</h3>
+                <p>当前 IMAP 状态：<span class="status-pending">待配置</span></p>
+                <p class="hint">请在 .env 文件中配置邮箱 IMAP 参数</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

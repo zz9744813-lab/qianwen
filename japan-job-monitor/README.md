@@ -2,6 +2,8 @@
 
 一个定时运行的赴日工作相关信息监测工具，自动检测政策变化、新职位和中介名录变动，并通过 Hermes 推送到您的邮箱和 Discord。
 
+**✨ 新增 Web 管理界面** - 可视化查看监测状态、历史记录和配置！
+
 ## 📋 功能概述
 
 本系统监测三类信息：
@@ -78,7 +80,26 @@ python main.py
 tail -f monitor.log
 ```
 
-### 5. 配置定时任务（crontab）
+### 5. 启动 Web 管理界面（可选但推荐）
+
+```bash
+# 后台启动 Web 服务
+nohup python web_ui.py > webui.log 2>&1 &
+
+# 查看是否启动成功
+ps aux | grep web_ui
+
+# 在浏览器访问 http://你的 VPS IP:5000
+```
+
+Web 界面功能：
+- 📊 **仪表板** - 总览统计数据、图表展示、最近活动
+- 📜 **历史记录** - 分页查看所有监测记录，支持筛选
+- 📡 **数据源** - 查看已配置的信息源
+- 📝 **日志** - 实时查看最新日志
+- ⚙️ **设置** - 查看关键词列表和配置状态
+
+### 6. 配置定时任务（crontab）
 
 ```bash
 # 编辑 crontab
@@ -101,6 +122,7 @@ crontab -l
 ```
 japan-job-monitor/
 ├── main.py              # 主程序入口
+├── web_ui.py            # Web 管理界面（Flask）
 ├── storage.py           # 数据库操作
 ├── notifier.py          # 通知模块（对接 Hermes）
 ├── fetchers/            # 抓取模块
@@ -111,6 +133,11 @@ japan-job-monitor/
 ├── config/
 │   ├── sources.yaml     # 信息源配置
 │   └── keywords.txt     # 关键词列表
+├── templates/           # Web 界面模板
+│   └── index.html       # 主页面
+├── static/              # Web 界面静态资源
+│   ├── style.css        # 样式表
+│   └── app.js           # 前端 JavaScript
 ├── .env                 # 环境变量（密钥，不进 git）
 ├── .env.example         # 环境变量示例
 ├── .gitignore
