@@ -1,0 +1,4 @@
+2026-05-28 11:14:25 - __main__ - INFO - Testing fetch...
+2026-05-28 11:14:25 - fetchers.page_change - INFO - 抓取页面：https://www.isa.go.jp/
+2026-05-28 11:14:25 - fetchers.page_change - INFO - 页面抓取完成：https://www.isa.go.jp/, 内容长度：2847
+2026-05-28 11:14:25 - __main__ - INFO - Result: title=出入国在留管理庁ホームページ, content_len=2847
