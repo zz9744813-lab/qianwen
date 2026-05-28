@@ -4,7 +4,7 @@
 
 // 全局状态
 let currentPage = 1;
-let currentFilters = { type: '', source: '' };
+let currentFilters = { type: '', source: '', priority: '', tag: '' };
 
 // DOM 加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHistory();
     loadSources();
     loadKeywords();
+    loadAllTags(); // 加载所有标签用于筛选
     
     // 绑定事件
     document.getElementById('run-now-btn').addEventListener('click', runMonitor);
@@ -415,3 +416,36 @@ function formatDate(dateStr) {
         minute: '2-digit'
     });
 }
+
+/**
+ * 加载所有标签（用于筛选器）
+ */
+async function loadAllTags() {
+    try {
+        // 先获取一批历史记录来提取所有标签
+        const response = await fetch('/api/history?per_page=100');
+        const result = await response.json();
+        
+        if (result.success) {
+            const allTags = new Set();
+            result.data.items.forEach(item => {
+                if (item.tags && Array.isArray(item.tags)) {
+                    item.tags.forEach(tag => allTags.add(tag));
+                }
+            });
+            
+            // 填充标签筛选器
+            const tagSelect = document.getElementById('filter-tag');
+            if (tagSelect) {
+                let html = '<option value="">全部标签</option>';
+                Array.from(allTags).sort().forEach(tag => {
+                    html += `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`;
+                });
+                tagSelect.innerHTML = html;
+            }
+        }
+    } catch (error) {
+        console.error('加载标签失败:', error);
+    }
+}
+

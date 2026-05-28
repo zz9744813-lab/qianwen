@@ -53,7 +53,10 @@ class Storage:
                     content_hash TEXT,              -- 页面内容哈希（page_change 用）
                     first_seen  TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 首次发现时间
                     notified    INTEGER DEFAULT 0,  -- 是否已通知：0=否，1=是
-                    extra_data  TEXT                -- 额外数据（JSON 格式）
+                    extra_data  TEXT,               -- 额外数据（JSON 格式）
+                    priority    TEXT DEFAULT 'normal', -- 优先级：critical/high/normal
+                    notify_channels TEXT,           -- 通知渠道：comma-separated (email,discord)
+                    tags        TEXT                -- 标签：comma-separated (政策，签证，招聘，etc)
                 )
             """)
             
@@ -156,7 +159,8 @@ class Storage:
     
     def add_item(self, source_name: str, item_type: str, unique_key: str,
                  title: str = None, url: str = None, content_hash: str = None,
-                 extra_data: str = None) -> bool:
+                 extra_data: str = None, priority: str = 'normal', 
+                 notify_channels: list = None, tags: list = None) -> bool:
         """
         添加新条目到数据库
         
@@ -168,6 +172,9 @@ class Storage:
             url: 链接
             content_hash: 内容哈希
             extra_data: 额外数据（JSON 字符串）
+            priority: 优先级 (critical/high/normal)
+            notify_channels: 通知渠道列表 ['email', 'discord']
+            tags: 标签列表 ['政策', '签证']
             
         Returns:
             True=成功，False=失败（如重复）
@@ -175,15 +182,20 @@ class Storage:
         conn = self._get_connection()
         try:
             cursor = conn.cursor()
+            
+            # 转换列表为逗号分隔字符串
+            channels_str = ','.join(notify_channels) if notify_channels else None
+            tags_str = ','.join(tags) if tags else None
+            
             cursor.execute("""
                 INSERT OR IGNORE INTO seen_items 
-                (source_name, item_type, unique_key, title, url, content_hash, extra_data)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (source_name, item_type, unique_key, title, url, content_hash, extra_data))
+                (source_name, item_type, unique_key, title, url, content_hash, extra_data, priority, notify_channels, tags)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (source_name, item_type, unique_key, title, url, content_hash, extra_data, priority, channels_str, tags_str))
             
             if cursor.rowcount > 0:
                 conn.commit()
-                logger.debug(f"添加新条目：{source_name} - {title or unique_key}")
+                logger.debug(f"添加新条目：{source_name} - {title or unique_key} [priority={priority}]")
                 return True
             else:
                 logger.debug(f"条目已存在，跳过：{source_name} - {title or unique_key}")

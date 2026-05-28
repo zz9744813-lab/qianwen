@@ -8,34 +8,32 @@ __pycache__/
 env/
 venv/
 .venv/
+.env
+.env.local
+.env.*
+.venv/
 .ENV
 .python-version
+.pytest_cache/
+.mypy_cache/
 
-# Build and distribution artifacts
+# Build artifacts
 build/
 dist/
 *.egg
 *.egg-info/
 *.so
+*.dylib
+*.dll
 
-# Dependencies
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+# Web
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
 *.log
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
 
 # OS generated files
 .DS_Store
@@ -45,11 +43,4 @@ coverage.xml
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Local configuration
-.env
-.env.local
-*.env
-*.env.*
-config.local
 ```

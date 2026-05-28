@@ -479,3 +479,44 @@ tbody tr:last-child td {
         padding: 8px 10px;
     }
 }
+
+/* 优先级样式 */
+.priority-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.priority-critical {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.priority-high {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.priority-normal {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+/* 标签徽章样式 */
+.tag-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin: 2px;
+}
+
+/* 通知渠道图标 */
+.channel-icon {
+    font-size: 1.2em;
+    margin-right: 3px;
+}
