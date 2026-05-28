@@ -157,6 +157,8 @@ async function loadHistory(page = 1) {
         let url = `/api/history?page=${page}&per_page=20`;
         if (currentFilters.type) url += `&type=${encodeURIComponent(currentFilters.type)}`;
         if (currentFilters.source) url += `&source=${encodeURIComponent(currentFilters.source)}`;
+        if (currentFilters.priority) url += `&priority=${encodeURIComponent(currentFilters.priority)}`;
+        if (currentFilters.tag) url += `&tag=${encodeURIComponent(currentFilters.tag)}`;
         
         const response = await fetch(url);
         const result = await response.json();
@@ -166,23 +168,45 @@ async function loadHistory(page = 1) {
             const data = result.data;
             
             if (data.items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="loading">暂无记录</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="loading">暂无记录</td></tr>';
             } else {
                 let html = '';
                 data.items.forEach(item => {
+                    // 优先级徽章
+                    const priorityClass = `priority-${item.priority}`;
+                    const priorityLabel = item.priority === 'critical' ? '🔴 紧急' : 
+                                         (item.priority === 'high' ? '🟠 重要' : '⚪ 常规');
+                    
+                    // 通知渠道图标
+                    let channelsHtml = '';
+                    if (item.notify_channels && item.notify_channels.length > 0) {
+                        channelsHtml = item.notify_channels.map(ch => {
+                            const icon = ch === 'email' ? '📧' : '💬';
+                            return `<span class="channel-icon">${icon}</span>`;
+                        }).join(' ');
+                    } else {
+                        channelsHtml = '-';
+                    }
+                    
+                    // 标签显示
+                    let tagsHtml = '';
+                    if (item.tags && item.tags.length > 0) {
+                        tagsHtml = item.tags.map(tag => `<span class="tag-badge">${escapeHtml(tag)}</span>`).join('');
+                    } else {
+                        tagsHtml = '-';
+                    }
+                    
                     html += `
                         <tr>
                             <td>${item.id}</td>
+                            <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
                             <td>${escapeHtml(item.source_name)}</td>
                             <td><span class="source-type">${item.item_type}</span></td>
                             <td>${escapeHtml(item.title)}</td>
                             <td>${item.url !== 'N/A' ? `<a href="${escapeHtml(item.url)}" target="_blank">链接</a>` : '-'}</td>
                             <td>${formatDate(item.first_seen)}</td>
-                            <td>
-                                <span class="status-badge ${item.notified ? 'status-notified' : 'status-pending'}">
-                                    ${item.notified ? '已通知' : '待通知'}
-                                </span>
-                            </td>
+                            <td>${channelsHtml}</td>
+                            <td>${tagsHtml}</td>
                         </tr>
                     `;
                 });
@@ -235,10 +259,14 @@ function renderPagination(pagination) {
 function applyFilter() {
     const typeSelect = document.getElementById('filter-type');
     const sourceSelect = document.getElementById('filter-source');
+    const prioritySelect = document.getElementById('filter-priority');
+    const tagSelect = document.getElementById('filter-tag');
     
     currentFilters = {
         type: typeSelect.value,
-        source: sourceSelect.value
+        source: sourceSelect.value,
+        priority: prioritySelect.value,
+        tag: tagSelect.value
     };
     
     loadHistory(1);
@@ -250,7 +278,9 @@ function applyFilter() {
 function clearFilter() {
     document.getElementById('filter-type').value = '';
     document.getElementById('filter-source').value = '';
-    currentFilters = { type: '', source: '' };
+    document.getElementById('filter-priority').value = '';
+    document.getElementById('filter-tag').value = '';
+    currentFilters = { type: '', source: '', priority: '', tag: '' };
     loadHistory(1);
 }
 
@@ -443,9 +473,29 @@ async function loadAllTags() {
                 });
                 tagSelect.innerHTML = html;
             }
+            
+            // 同时更新来源筛选器（如果还没加载）
+            updateSourceFilterFromAPI();
         }
     } catch (error) {
         console.error('加载标签失败:', error);
+    }
+}
+
+/**
+ * 从 API 加载来源筛选器选项
+ */
+async function updateSourceFilterFromAPI() {
+    try {
+        const response = await fetch('/api/sources');
+        const result = await response.json();
+        
+        if (result.success) {
+            const sources = result.data.sources || [];
+            updateSourceFilter(sources);
+        }
+    } catch (error) {
+        console.error('加载来源筛选器失败:', error);
     }
 }
 
