@@ -127,13 +127,14 @@ def get_stats():
 
 @app.route('/api/history')
 def get_history():
-    """获取历史记录（支持分页和筛选，包含优先级）"""
+    """获取历史记录（支持分页和筛选，包含优先级、标签）"""
     try:
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 20))
         item_type = request.args.get('type', '')
         source = request.args.get('source', '')
         priority = request.args.get('priority', '')
+        tag = request.args.get('tag', '')  # 新增：按标签筛选
         
         offset = (page - 1) * per_page
         
@@ -156,6 +157,11 @@ def get_history():
             conditions.append("priority = ?")
             params.append(priority)
         
+        if tag:
+            # 标签模糊匹配（tags 字段存的是逗号分隔字符串）
+            conditions.append("tags LIKE ?")
+            params.append(f'%{tag}%')
+        
         where_clause = ""
         if conditions:
             where_clause = "WHERE " + " AND ".join(conditions)
@@ -168,7 +174,7 @@ def get_history():
         # 查询数据
         query = f"""
             SELECT id, source_name, item_type, unique_key, title, url, 
-                   first_seen, notified, priority, notify_channels
+                   first_seen, notified, priority, notify_channels, tags
             FROM seen_items 
             {where_clause}
             ORDER BY first_seen DESC
@@ -183,7 +189,15 @@ def get_history():
             notify_channels = []
             if row['notify_channels']:
                 try:
-                    notify_channels = row['notify_channels'].split(',')
+                    notify_channels = [c.strip() for c in row['notify_channels'].split(',') if c.strip()]
+                except:
+                    pass
+            
+            # 解析 tags
+            tags = []
+            if row['tags']:
+                try:
+                    tags = [t.strip() for t in row['tags'].split(',') if t.strip()]
                 except:
                     pass
             
@@ -196,7 +210,8 @@ def get_history():
                 'first_seen': row['first_seen'],
                 'notified': bool(row['notified']),
                 'priority': row['priority'] or 'normal',
-                'notify_channels': notify_channels
+                'notify_channels': notify_channels,
+                'tags': tags
             })
         
         conn.close()

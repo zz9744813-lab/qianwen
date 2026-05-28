@@ -142,6 +142,9 @@
                 <select id="filter-source">
                     <option value="">全部来源</option>
                 </select>
+                <select id="filter-tag">
+                    <option value="">全部标签</option>
+                </select>
                 <button id="apply-filter" class="btn btn-primary">筛选</button>
                 <button id="clear-filter" class="btn btn-secondary">清除</button>
             </div>
@@ -156,10 +159,11 @@
                         <th>链接</th>
                         <th>时间</th>
                         <th>通知方式</th>
+                        <th>标签</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="8" class="loading">加载中...</td></tr>
+                    <tr><td colspan="9" class="loading">加载中...</td></tr>
                 </tbody>
             </table>
             <div class="pagination" id="pagination"></div>
