@@ -52,14 +52,33 @@ class PageChangeFetcher:
             response.raise_for_status()
             
             # 处理编码问题：服务器可能返回错误的编码信息
-            # 使用 apparent_encoding 自动检测正确的编码
+            # 优先使用 apparent_encoding 自动检测正确的编码
             if response.encoding == 'ISO-8859-1' or not response.encoding:
                 # ISO-8859-1 通常是默认值，实际可能是 UTF-8 或其他
                 response.encoding = response.apparent_encoding
                 logger.debug(f"自动检测编码：{response.encoding}")
             
-            # 解析 HTML
-            soup = BeautifulSoup(response.text, 'html.parser')
+            # 强制使用 UTF-8 解码（如果检测失败）
+            try:
+                html_content = response.content.decode('utf-8')
+            except UnicodeDecodeError:
+                # 如果 UTF-8 失败，尝试用检测到的编码
+                try:
+                    html_content = response.content.decode(response.encoding or 'utf-8', errors='ignore')
+                except Exception:
+                    # 最后手段：直接忽略错误
+                    html_content = response.text
+            
+            # 解析 HTML，使用 lxml 或 html.parser
+            try:
+                soup = BeautifulSoup(html_content, 'html.parser')
+            except Exception as e:
+                logger.warning(f"html.parser 解析失败，尝试 lxml: {e}")
+                try:
+                    soup = BeautifulSoup(html_content, 'lxml')
+                except Exception:
+                    # 如果都失败，使用纯文本模式
+                    soup = BeautifulSoup(html_content, 'html5lib')
             
             # 提取标题
             title = ""
