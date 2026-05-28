@@ -61,13 +61,15 @@ async function loadStats() {
         
         if (result.success) {
             const data = result.data;
-            document.getElementById('total-count').textContent = data.total;
-            document.getElementById('new-today').textContent = data.new_today;
-            document.getElementById('notified-count').textContent = data.notified;
+            document.getElementById('total-count').textContent = data.total || 0;
+            document.getElementById('new-today').textContent = data.new_today || 0;
+            document.getElementById('notified-count').textContent = data.notified || 0;
+            document.getElementById('critical-count').textContent = data.critical || 0;
             
             // 渲染图表
-            renderChart('by-type-chart', data.by_type);
-            renderChart('by-source-chart', data.by_source);
+            renderChart('by-priority-chart', data.by_priority || {});
+            renderChart('by-type-chart', data.by_type || {});
+            renderChart('by-source-chart', data.by_source || {});
             
             // 加载最近活动
             loadRecentActivity();
@@ -113,27 +115,37 @@ function renderChart(containerId, data) {
  */
 async function loadRecentActivity() {
     try {
-        const response = await fetch('/api/history?page=1&per_page=5');
+        const response = await fetch('/api/history?page=1&per_page=10');
         const result = await response.json();
         
         if (result.success) {
             const tbody = document.querySelector('#recent-table tbody');
-            if (result.data.items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="loading">暂无记录</td></tr>';
+            if (!result.data.items || result.data.items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">暂无记录</td></tr>';
                 return;
             }
             
             let html = '';
             result.data.items.forEach(item => {
+                // 优先级徽章
+                const priorityClass = `priority-${item.priority || 'normal'}`;
+                const priorityLabel = item.priority === 'critical' ? '🔴 紧急' : 
+                                     (item.priority === 'high' ? '🟠 重要' : '⚪ 常规');
+                
+                // 通知状态
+                const statusBadge = item.notified ? 'status-notified' : 'status-pending';
+                const statusText = item.notified ? '已通知' : '待通知';
+                
                 html += `
                     <tr>
+                        <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
                         <td>${escapeHtml(item.source_name)}</td>
                         <td><span class="source-type">${item.item_type}</span></td>
-                        <td>${escapeHtml(item.title)}</td>
+                        <td class="title-cell">${escapeHtml(item.title)}</td>
                         <td>${formatDate(item.first_seen)}</td>
                         <td>
-                            <span class="status-badge ${item.notified ? 'status-notified' : 'status-pending'}">
-                                ${item.notified ? '已通知' : '待通知'}
+                            <span class="status-badge ${statusBadge}">
+                                ${statusText}
                             </span>
                         </td>
                     </tr>
@@ -163,17 +175,18 @@ async function loadHistory(page = 1) {
         const response = await fetch(url);
         const result = await response.json();
         
-        if (result.success) {
+        if (result.success && result.data) {
             const tbody = document.querySelector('#history-table tbody');
             const data = result.data;
+            const items = data.items || [];
             
-            if (data.items.length === 0) {
+            if (items.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="9" class="loading">暂无记录</td></tr>';
             } else {
                 let html = '';
-                data.items.forEach(item => {
+                items.forEach(item => {
                     // 优先级徽章
-                    const priorityClass = `priority-${item.priority}`;
+                    const priorityClass = `priority-${item.priority || 'normal'}`;
                     const priorityLabel = item.priority === 'critical' ? '🔴 紧急' : 
                                          (item.priority === 'high' ? '🟠 重要' : '⚪ 常规');
                     
@@ -196,14 +209,20 @@ async function loadHistory(page = 1) {
                         tagsHtml = '-';
                     }
                     
+                    // 摘要显示（从标题或 URL 提取）
+                    const summary = generateSummary(item);
+                    
                     html += `
                         <tr>
                             <td>${item.id}</td>
                             <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
                             <td>${escapeHtml(item.source_name)}</td>
                             <td><span class="source-type">${item.item_type}</span></td>
-                            <td>${escapeHtml(item.title)}</td>
-                            <td>${item.url !== 'N/A' ? `<a href="${escapeHtml(item.url)}" target="_blank">链接</a>` : '-'}</td>
+                            <td class="title-cell">
+                                <div class="title-text">${escapeHtml(item.title)}</div>
+                                ${summary ? `<div class="summary-text">${summary}</div>` : ''}
+                            </td>
+                            <td>${item.url !== 'N/A' && item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" class="url-link">链接</a>` : '-'}</td>
                             <td>${formatDate(item.first_seen)}</td>
                             <td>${channelsHtml}</td>
                             <td>${tagsHtml}</td>
@@ -214,11 +233,34 @@ async function loadHistory(page = 1) {
             }
             
             // 渲染分页
-            renderPagination(data.pagination);
+            if (data.pagination) {
+                renderPagination(data.pagination);
+            }
         }
     } catch (error) {
         console.error('加载历史记录失败:', error);
     }
+}
+
+/**
+ * 生成摘要（从标题或 URL 提取关键信息）
+ */
+function generateSummary(item) {
+    if (!item) return '';
+    
+    // 如果有标题，截取前 50 个字符作为摘要
+    if (item.title && item.title.length > 30) {
+        return item.title.substring(0, 50) + (item.title.length > 50 ? '...' : '');
+    }
+    
+    // 根据类型生成默认摘要
+    const typeSummaries = {
+        'policy': '政策更新通知',
+        'job': '招聘职位信息',
+        'registry': '名录变更提醒'
+    };
+    
+    return typeSummaries[item.item_type] || '';
 }
 
 /**
@@ -483,19 +525,86 @@ async function loadAllTags() {
 }
 
 /**
- * 从 API 加载来源筛选器选项
+ * 加载重要提醒列表
  */
-async function updateSourceFilterFromAPI() {
+async function loadAlerts(filter = 'all') {
     try {
-        const response = await fetch('/api/sources');
+        let url = `/api/alerts?limit=50&filter=${filter}`;
+        const response = await fetch(url);
         const result = await response.json();
         
         if (result.success) {
-            const sources = result.data.sources || [];
-            updateSourceFilter(sources);
+            const container = document.getElementById('alerts-list');
+            const alerts = result.data.alerts || [];
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p class="loading">暂无重要提醒</p>';
+                return;
+            }
+            
+            let html = '';
+            alerts.forEach(alert => {
+                // 优先级样式
+                const priorityClass = alert.priority === 'critical' ? 'critical' : 
+                                     (alert.priority === 'high' ? 'high' : '');
+                
+                // 优先级标签
+                const priorityLabel = alert.priority === 'critical' ? '🔴 紧急' : 
+                                     (alert.priority === 'high' ? '🟠 重要' : '⚪ 常规');
+                
+                // 通知渠道图标
+                let channelsHtml = '';
+                if (alert.notify_channels && alert.notify_channels.length > 0) {
+                    channelsHtml = alert.notify_channels.map(ch => {
+                        const icon = ch === 'email' ? '📧' : '💬';
+                        return `<span class="channel-icon">${icon}</span>`;
+                    }).join(' ');
+                }
+                
+                // 生成摘要
+                const summary = generateSummary(alert);
+                
+                html += `
+                    <div class="alert-item ${priorityClass}">
+                        <div class="alert-header">
+                            <div class="alert-title">
+                                <span class="priority-badge priority-${alert.priority}">${priorityLabel}</span>
+                                <span style="margin-left: 10px;">${escapeHtml(alert.title)}</span>
+                            </div>
+                        </div>
+                        <div class="alert-meta">
+                            <span>📡 ${escapeHtml(alert.source_name)}</span>
+                            <span>📑 ${alert.item_type}</span>
+                            <span>🕐 ${formatDate(alert.first_seen)}</span>
+                            <span>${channelsHtml}</span>
+                        </div>
+                        ${summary ? `<div class="alert-summary">${summary}</div>` : ''}
+                        ${alert.url && alert.url !== 'N/A' ? 
+                            `<div style="margin-top: 10px;"><a href="${escapeHtml(alert.url)}" target="_blank" class="url-link">🔗 查看详情 →</a></div>` : 
+                            ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
         }
     } catch (error) {
-        console.error('加载来源筛选器失败:', error);
+        console.error('加载重要提醒失败:', error);
     }
 }
+
+// 绑定提醒筛选器事件
+document.addEventListener('DOMContentLoaded', function() {
+    const filterBtns = document.querySelectorAll('.alert-filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            loadAlerts(this.dataset.filter);
+        });
+    });
+    
+    // 初始加载提醒
+    loadAlerts('all');
+});
 
