@@ -1,0 +1,31 @@
+# 赴日工作信息监测系统 - Git 忽略文件
+
+# 环境变量（包含密钥，绝不提交）
+.env
+
+# SQLite 数据库（运行后生成）
+monitor.db
+
+# 日志文件
+monitor.log
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 虚拟环境
+venv/
+env/
+.venv/
+
+# IDE 配置
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
