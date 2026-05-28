@@ -263,7 +263,8 @@ async function loadSources() {
         
         if (result.success) {
             const container = document.getElementById('sources-list');
-            const sources = result.data || [];
+            // result.data 是包含 sources 数组的对象
+            const sources = result.data.sources || [];
             
             if (sources.length === 0) {
                 container.innerHTML = '<p class="loading">暂无数据源配置</p>';
@@ -283,6 +284,7 @@ async function loadSources() {
                             <div class="source-meta" style="margin-top: 5px;">
                                 <span style="font-size: 0.85em; color: #6c757d;">${escapeHtml(source.url)}</span>
                             </div>
+                            ${source.note ? `<div class="source-meta" style="margin-top: 3px; font-size: 0.8em; color: #6c757d;">${escapeHtml(source.note)}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -303,6 +305,8 @@ async function loadSources() {
  */
 function updateSourceFilter(sources) {
     const select = document.getElementById('filter-source');
+    if (!select) return; // 如果筛选器不存在则跳过
+    
     const currentValue = select.value;
     
     let html = '<option value="">全部来源</option>';
